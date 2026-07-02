@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Census Forecast Dashboard</title>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --sidebar-bg: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-coral: #fb7185;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        select {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--accent-blue);
+        }
+
+        /* Custom Checkboxes style */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .checkbox-option:hover {
+            color: var(--text-primary);
+        }
+
+        .checkbox-option input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .submit-btn {
+            background-color: var(--accent-blue);
+            color: #0f172a;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.85rem;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Main Panel Styling */
+        .main-panel {
+            flex-grow: 1;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .header-section h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .header-section .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Cards Layout */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+        }
+
+        .card.coral .card-value {
+            color: var(--accent-coral);
+        }
+
+        .card.green .card-value {
+            color: var(--accent-green);
+        }
+
+        .card-subtext {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-item {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding-bottom: 0.5rem;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab-item.active {
+            color: var(--text-primary);
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-blue);
+        }
+
+        /* Chart Area Styling */
+        .chart-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .chart-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Secondary Visuals Section */
+        .visualizations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Form -->
+    <div class="sidebar">
+        <h2>Dashboard Options</h2>
+        
+        <form method="POST" id="dashboardForm">
+            {% csrf_token %}
+            
+            <div class="sidebar-section">
+                <span class="sidebar-label">Select Scope Level</span>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="scope" value="all" {% if selected_scope == 'all' %}checked{% endif %}> Total (All India)
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="scope" value="state" {% if selected_scope == 'state' %}checked{% endif %}> State
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="scope" value="district" {% if selected_scope == 'district' or not selected_scope %}checked{% endif %}> District
+                    </label>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">Select State</span>
+                <select name="state" id="stateSelect" required>
+                    <option value="" disabled {% if not selected_state %}selected{% endif %}>-- Choose State --</option>
+                    {% for state in states %}
+                        <option value="{{ state }}" {% if state == selected_state %}selected{% endif %}>{{ state }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">Select District</span>
+                <select name="district" id="districtSelect" required>
+                    <option value="" disabled {% if not selected_district %}selected{% endif %}>-- Choose District --</option>
+                </select>
+            </div>
+
+            <div class="sidebar-section">
+                <span class="sidebar-label">Display Options</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Choose Indicators to Display:</span>
+                <div class="checkbox-group">
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="gender_analysis" {% if gender_analysis %}checked{% endif %}> Gender Analysis
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="age_distribution" {% if age_distribution %}checked{% endif %}> Age Gaps Distribution
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="literacy_education" {% if literacy_education %}checked{% endif %}> Literacy & Education
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Update Dashboard</button>
+        </form>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="main-panel">
+        
+        <!-- Header -->
+        <div class="header-section">
+            {% if data %}
+                <h1 style="color: var(--text-primary);">
+                    <span style="color: var(--accent-coral);">{{ title_label }}</span>
+                </h1>
+            {% else %}
+                <h1>Welcome to Census Projections Dashboard</h1>
+            {% endif %}
+            <span class="subtitle">Census Demographic Analysis, Growth Model, and Projections (2001 - 2026)</span>
+        </div>
+
+        {% if error_message %}
+            <div style="background-color: rgba(251, 113, 133, 0.1); border: 1px solid var(--accent-coral); color: var(--accent-coral); padding: 1rem; border-radius: 0.5rem;">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
+        {% if data %}
+            <!-- Metric Cards -->
+            <div class="cards-container">
+                <div class="card">
+                    <span class="card-title">2001 Population</span>
+                    <span class="card-value">{{ data.persons }}</span>
+                    <span class="card-subtext">Census Observation</span>
+                </div>
+                <div class="card green">
+                    <span class="card-title">2011 Population</span>
+                    <span class="card-value">{{ data.population }}</span>
+                    <span class="card-subtext">Census Observation</span>
+                </div>
+                <div class="card coral">
+                    <span class="card-title">Annual Growth Rate</span>
+                    <span class="card-value">{{ data.annual_growth_rate|floatformat:4 }}%</span>
+                    <span class="card-subtext">Compound Annual CAGR</span>
+                </div>
+                <div class="card">
+                    <span class="card-title">Projected 2026 Pop</span>
+                    <span class="card-value">{{ data.population_2026 }}</span>
+                    <span class="card-subtext">Growth Model Forecast</span>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation (Static headers matching the design) -->
+            <div class="tabs-nav">
+                <span class="tab-item active">Population Trend & Forecasts</span>
+                <span class="tab-item">Demographic Indicators</span>
+                <span class="tab-item">Data & Export</span>
+            </div>
+
+            <!-- Main Line Graph Card -->
+            <div class="chart-card">
+                <h3>Population History and Growth Projections (2001 - 2026)</h3>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Extra visualizations based on Checkboxes -->
+            <div class="visualizations-grid">
+                {% if gender_analysis %}
+                    <div class="chart-card" style="grid-column: span 2;">
+                        <h3>Gender Distribution Comparison (2001 vs 2011)</h3>
+                        <div style="display: flex; flex-direction: row; justify-content: space-around; flex-wrap: wrap; gap: 2rem; width: 100%;">
+                            <div style="text-align: center; flex: 1; min-width: 200px;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">2001 Gender Split</h4>
+                                <div style="position: relative; height: 200px; display: flex; justify-content: center;">
+                                    <canvas id="genderChart2001" style="max-width: 200px;"></canvas>
+                                </div>
+                            </div>
+                            <div style="text-align: center; flex: 1; min-width: 200px;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">2011 Gender Split</h4>
+                                <div style="position: relative; height: 200px; display: flex; justify-content: center;">
+                                    <canvas id="genderChart2011" style="max-width: 200px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if age_distribution %}
+                    <div class="chart-card" style="grid-column: span 2;">
+                        <h3>Age Group Distribution Comparison (2001 vs 2011)</h3>
+                        <div style="display: flex; flex-direction: row; justify-content: space-around; flex-wrap: wrap; gap: 2rem; width: 100%;">
+                            <div style="flex: 1; min-width: 280px;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary); text-align: center;">2001 Age Groups (% of Pop)</h4>
+                                <div style="position: relative; height: 220px;">
+                                    <canvas id="ageChart2001"></canvas>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 280px;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary); text-align: center;">2011 Age Groups (% of Pop)</h4>
+                                <div style="position: relative; height: 220px;">
+                                    <canvas id="ageChart2011"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if literacy_education %}
+                    <div class="card" style="grid-column: span 1; justify-content: center; gap: 1rem; padding: 2rem;">
+                        <span class="card-title" style="font-size: 1rem;">Literacy & Education Indicator (2001)</span>
+                        <div>
+                            <span class="card-value" style="color: var(--accent-green); font-size: 3rem;">{{ data.literacy_rate_2001|floatformat:2 }}%</span>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem;">
+                                of the district population was literate in 2001.
+                                Total Literates: <strong>{{ data.persons_literate_2001 }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <!-- Default Welcome Display -->
+            <div class="chart-card" style="align-items: center; justify-content: center; min-height: 300px; color: var(--text-secondary);">
+                <p style="font-size: 1.25rem;">Please select a State and District in the sidebar and click <strong>Update Dashboard</strong> to view forecasts.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Script to manage dynamic dropdown selections and Chart.js rendering -->
+    <script>
+        // Load mapping of {State: [District1, District2]} generated by Django
+        const stateDistricts = {{ state_districts_json|safe }};
+        const stateSelect = document.getElementById('stateSelect');
+        const districtSelect = document.getElementById('districtSelect');
+
+        // Capture initially selected values if we are displaying a search result
+        const currentSelectedState = "{{ selected_state|default:'' }}";
+        const currentSelectedDistrict = "{{ selected_district|default:'' }}";
+
+        function updateDistrictsDropdown(selectedState, preselectDistrict) {
+            districtSelect.innerHTML = '<option value="" disabled selected>-- Choose District --</option>';
+            
+            if (selectedState && stateDistricts[selectedState]) {
+                stateDistricts[selectedState].forEach(dist => {
+                    const option = document.createElement('option');
+                    option.value = dist;
+                    option.textContent = dist;
+                    if (dist === preselectDistrict) {
+                        option.selected = true;
+                    }
+                    districtSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Listener for state change to update district options
+        stateSelect.addEventListener('change', function() {
+            updateDistrictsDropdown(this.value, '');
+        });
+
+        // Initialize state-district relationship on page load
+        if (currentSelectedState) {
+            updateDistrictsDropdown(currentSelectedState, currentSelectedDistrict);
+        }
+
+        // Logic to enable/disable dropdowns dynamically based on selected Scope Level
+        const scopeRadios = document.querySelectorAll('input[name="scope"]');
+        function updateDropdownAvailability() {
+            const selectedScope = document.querySelector('input[name="scope"]:checked').value;
+            if (selectedScope === 'all') {
+                stateSelect.disabled = true;
+                stateSelect.required = false;
+                districtSelect.disabled = true;
+                districtSelect.required = false;
+            } else if (selectedScope === 'state') {
+                stateSelect.disabled = false;
+                stateSelect.required = true;
+                districtSelect.disabled = true;
+                districtSelect.required = false;
+            } else {
+                stateSelect.disabled = false;
+                stateSelect.required = true;
+                districtSelect.disabled = false;
+                districtSelect.required = true;
+            }
+        }
+        scopeRadios.forEach(radio => radio.addEventListener('change', updateDropdownAvailability));
+        updateDropdownAvailability(); // Run immediately on load
+
+        // Render charts using Chart.js after results load
+        {% if data %}
+            // 1. Line Chart: Population Projections
+            const forecastYears = {{ forecast_years|safe }};
+            const forecastPopulations = {{ forecast_populations|safe }};
+            
+            const lineCtx = document.getElementById('growthChart').getContext('2d');
+            new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: forecastYears,
+                    datasets: [{
+                        label: 'Population Trend / Projections',
+                        data: forecastPopulations,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fb7185',
+                        pointRadius: function(context) {
+                            const index = context.dataIndex;
+                            // Make historical points (2001 & 2011) larger
+                            return (index === 0 || index === 1) ? 6 : 4;
+                        },
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 2. Gender Pie Charts (2001 and 2011)
+            {% if gender_analysis %}
+                const genderCtx2001 = document.getElementById('genderChart2001').getContext('2d');
+                new Chart(genderCtx2001, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Males', 'Females'],
+                        datasets: [{
+                            data: [{{ data.males_2001 }}, {{ data.females_2001 }}],
+                            backgroundColor: ['#38bdf8', '#fb7185'],
+                            borderWidth: 1,
+                            borderColor: '#1e293b'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f8fafc' },
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+
+                const genderCtx2011 = document.getElementById('genderChart2011').getContext('2d');
+                new Chart(genderCtx2011, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Males', 'Females'],
+                        datasets: [{
+                            data: [{{ data.male_2011 }}, {{ data.female_2011 }}],
+                            backgroundColor: ['#38bdf8', '#fb7185'],
+                            borderWidth: 1,
+                            borderColor: '#1e293b'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#f8fafc' },
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            {% endif %}
+
+            // 3. Age Group Bar Charts (2001 and 2011)
+            {% if age_distribution %}
+                const ageCtx2001 = document.getElementById('ageChart2001').getContext('2d');
+                new Chart(ageCtx2001, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0-4 Yrs', '5-14 Yrs', '15-59 Yrs', '60+ Yrs'],
+                        datasets: [{
+                            label: 'Percentage (%)',
+                            data: [
+                                {{ data.age_0_4_pct_2001|floatformat:2 }},
+                                {{ data.age_5_14_pct_2001|floatformat:2 }},
+                                {{ data.age_15_59_pct_2001|floatformat:2 }},
+                                {{ data.age_60_plus_pct_2001|floatformat:2 }}
+                            ],
+                            backgroundColor: ['#34d399', '#38bdf8', '#a78bfa', '#f43f5e'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                grid: { color: '#334155' },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+
+                const ageCtx2011 = document.getElementById('ageChart2011').getContext('2d');
+                new Chart(ageCtx2011, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0-29 Yrs', '30-49 Yrs', '50+ Yrs'],
+                        datasets: [{
+                            label: 'Percentage (%)',
+                            data: [
+                                {{ data.age_0_29_pct_2011|floatformat:2 }},
+                                {{ data.age_30_49_pct_2011|floatformat:2 }},
+                                {{ data.age_50_pct_2011|floatformat:2 }}
+                            ],
+                            backgroundColor: ['#34d399', '#38bdf8', '#a78bfa'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                grid: { color: '#334155' },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            {% endif %}
+        {% endif %}
+    </script>
+</body>
+</html>
